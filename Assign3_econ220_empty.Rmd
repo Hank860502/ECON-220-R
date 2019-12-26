@@ -1,0 +1,138 @@
+---
+title: "Assignment: Quantiles and Graphs"
+author: "Hank Chen"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(plotly)
+library(knitr)
+```
+
+# Birthweight data by gender 
+
+Load the BirthdataNC into R and use kable to create a table with mean and sd by gender. 
+
+```{r}
+BirthdataNC <- read.csv("BirthdataNC.csv",
+           stringsAsFactor = FALSE)
+kable(BirthdataNC %>%
+  group_by(gender) %>%
+  summarise(avweight = mean(weight), sdweight = sd(weight)), col.names = c("Gender", "Average Weight","Sd Weight"), digits=3)
+```
+
+Make an interactive histogram of weight by gender that also contains density plots in it. Add a vertical line with the average weight 
+
+```{r}
+# Interactive histogram of the data with density function included. The range goes from 0 to 12 by 0.3
+
+p<-ggplot(BirthdataNC, aes(x=weight, fill=gender)) +
+  geom_histogram(aes(y=..density..),breaks=seq(0, 12, by = 0.3)) +
+geom_vline(xintercept = 7.3, linetype="dotted", color = "darkgreen", size=1.7)+
+  geom_density(alpha=0.4)
+
+ggplotly(p)
+# You could also add these two layers to plot normal distributios too, similar to what we did in class for the sampling dist. No need to that here, but this is how you do it. 
+
+# stat_function(fun = dnorm, args = list(mean = 6.9, sd = 1.47), col=2)+ stat_function(fun = dnorm, args = list(mean = 7.3, sd = 1.51), col=4)+ labs(title="Histogram for sample means")+ theme_classic()
+
+```
+
+
+# Create quantiles:
+
+* Quartiles of weight for the whole population
+* Quartiles of weight by gender
+* deciles by gender
+* what is the weight of the 75% percentile male name the object p75m
+* what is the weight of the 45% percentile female name the object p45f
+
+
+```{r, results='hold'}
+
+# Create quartiles of the data
+quantile(BirthdataNC$weight)
+
+ 
+ # Create quartiles by gender. 
+female<-BirthdataNC %>%
+  filter(gender=="female")
+female_quantile<-quantile(female$weight)
+female_quantile
+  
+male<- BirthdataNC%>%
+  filter(gender=="male")
+male_quantile<-quantile(male$weight)
+male_quantile
+ 
+ 
+# Create deciles of the data
+ # this creates a sequence from 0 to 1 by 0.1
+ deciles<-seq(0,1, by=0.1)
+ quantile(female$weight, deciles)
+ quantile(male$weight, deciles)
+  
+  
+
+p75m<-quantile(male$weight, 0.75)
+p45f<-quantile(female$weight, 0.45)
+
+ p75m<-
+ print(paste("Weight for 75th percentile for the whole population", p75m))
+
+p45f<-
+ print(paste("Weight for 45th percentile for female population", p45f))
+
+```
+
+# Interactive boxplot of weight by gender. 
+
+What can you say about the distribution by looking at these graphs. Here you have to use another geometric that also ilustrates the distribution of your data. `geom_violin()`
+Explain what this graphs does. 
+
+
+```{r}
+
+# Boxplot by gender, interactive, figure out how to flip the coordinates
+
+# Violin by gender, interactive, figure out how to flip the coordinates. 
+p2<-ggplot(BirthdataNC, aes(x=gender, y=weight, color = gender)) +
+  geom_boxplot() +
+  coord_flip()+
+  ggtitle("Weight distribution by gender - Boxplot")+
+  theme_classic()
+ggplotly(p2)
+```
+
+Using the normal distribution and the t-student find  the critical values for $\alpha=10% and 1%$
+
+```{r}
+
+# The value of alpha is use for Hypothesis testing
+ 
+# Critical values for given alpha using the normal approximation and the t-student with 1000 d.f:
+
+p2<-ggplot(BirthdataNC, aes(x=gender, y=weight, color = gender)) +
+  geom_violin(aes(fill = factor(gender))) +
+  ggtitle("Weight distribution by gender - Violin Plot")+
+  theme_classic()
+ggplotly(p2)
+
+```
+
+```{r}
+# Using the normal distribution and the t-studnet find the critical values for α=10
+
+alpha <- c(0.10, 0.01) 
+# Critical values for given alpha using the normal approximation and the t-student with 1000 d.f:
+n<-qnorm(alpha) # critical value for the normal distribution
+n1<-round(qnorm(1-alpha), 3)
+t<-round(qt(1-alpha, 1000), 3)
+kable(data.frame(alpha, t , n1), digits=3, padding=5L, col.names = c("$\\alpha$", "T-student","Normal-right"))
+```
+

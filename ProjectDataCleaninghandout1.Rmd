@@ -1,0 +1,65 @@
+---
+title: "Cleaning Project data"
+author: "Paloma Lopezdemesa"
+date: "10/10/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+
+# Cleaning project data 
+
+```{r}
+# Load data into R, the data is already in R format
+load("~/Desktop/EMORY2019Fall/econ220/Econ220DataF2019_ano.Rdata")
+# Let's give it another name so it is easier to work with it.
+Prodata<-Econ220DataF2019_ano
+```
+
+# Data editing and cleaning 
+
+Unfortunately some of you gave answers that afected the class of the variables or that had more detail than necesary and that needs edits. 
+Please do reveal who you are in class unless you want studnets to see your personal data can see your personal data. 
+
+```{r, eval=FALSE}
+# If you want to save the data in csv because you want to see it in #excel this is the code you use to save into csv. However, I 
+#discourage you to use excel to edit your data, because it is not easy #to keep record of the edits. 
+write.csv(Prodata, "~/Dropbox/Prodata.csv", row.names=FALSE)
+```
+
+Let's look for example at Question 38 in the code book. 
+*What is the hourly wage of your current job in college?*
+*Give a numerical answer leave blank if you don t have a job*
+Supose you are interested in investigating this question, first you need to make sure the answers make sense.
+```{r}
+#View(Prodata$q38) allow you to see how this variable looks
+# Ideally this variable is numeric but because of the answers 
+#it is chr variable. use class to see this
+class(Prodata$q38)
+# You can also look at the variable specific cases that you need 
+#to fix and proceed to edit the variable as needed. 
+data.frame(table(Prodata$q38))
+# Now the edits
+Prodata$q38[Prodata$q38=="$8.00"]<-"8"
+Prodata$q38[Prodata$q38=="0(can't leave this blank, it is a point for the survey)"]<-NA
+Prodata$q38[Prodata$q38=="8.50 workstudy, 17/hr online chess tutoring"]<-8.5
+# last edit: making this variable numeric
+Prodata$q38<-as.numeric(Prodata$q38)
+# Check that the change was made
+class(Prodata$q38)
+# Fequency table again to make sure everything looks good now
+summary(Prodata$q38)
+```
+
+#In class exercise 
+Fix question 17 in the Data
+*What was your high school GPA ?*
+
+```{r}
+
+
+```
+

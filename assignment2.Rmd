@@ -1,0 +1,76 @@
+---
+title: "Assignment 2"
+author: "Hank Chen"
+date: "10/27/2019"
+output: 
+  prettydoc::html_pretty:
+    theme: architect
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=50),tidy=TRUE)
+#install.packages(tidyverse) remember this package should be already install. Packages are installed in this chunk so 
+library(tidyverse)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+# Your turn Assingment 2 
+
+Play around with this functions, start by looking at the documentation in R. For example ?punif  or ?qnorm ? sample 
+
+* Create a new Rmardown document 
+
+* Generate a vector y of 100 observations from the normal distribution with mean=3 and standart deviation sd=7 
+
+* Generate a vector z of 100 observations from the normal distribution with mean=7 and sd=3
+
+* Generate a vector u of 100 observations from the uniform distribution 
+* Generate a vector v of 100 observations of integers between 0 to 500 without replacement 
+* Make a histogram of y and v 
+* Make a box plot of z 
+* Using the data from college make a boxplot of the average faculty salary separate by public and private universities
+
+```{r}
+set.seed(245)
+
+y <- rnorm(100, mean=3, sd=7)
+z <- rnorm(100, mean=7, sd=3)
+u <- runif(100)
+v <- sample(1:500, 100, replace=FALSE)
+
+# Store y, v and z into a data frame before graphing
+dat<-data.frame(y,v,z)
+
+# Make a histogram of y
+ggplot(dat, aes(y))+
+geom_histogram(aes(y =..density.., fill=..count..), breaks=seq(-10, 20, by = 2), alpha = .8)+ geom_density(col=3) + labs(title="Histogram of Y")+ theme(plot.title = element_text(hjust = 0.5))
+
+# Make a histogram of v
+ggplot(dat, aes(v))+
+geom_histogram(aes(v, y =..density.., fill=..count..), breaks=seq(10, 500, by = 20),col="red", alpha = .8)+ geom_density(col=2) + labs(title="Histogram of V")+ theme(plot.title = element_text(hjust = 0.5))
+
+# Make a box plot of z 
+dat2<-data.frame(z)
+ggplot(data=dat2, aes(x="",  y=z))+
+  geom_boxplot(fill="green", alpha=0.5)+
+labs(title="z Boxplot") +
+   theme(plot.title = element_text(hjust = 0.5))
+
+
+college <- read.csv("http://672258.youcanlearnit.net/college.csv")  
+
+# Using the data from college to make a boxplot of the average faculty salary separate by public and private universities
+ggplot(data=college, aes(x=control,  y=faculty_salary_avg, fill=control))+
+  geom_boxplot( alpha=0.5)+
+labs(title="SAT Boxplot") +
+   theme(plot.title = element_text(hjust = 0.5))
+
+# Using the data from college to make a boxplot of the median debt separate by public and private universities
+ggplot(data=college, aes(x=control,  y=median_debt, color=control))+
+  geom_boxplot()+
+labs(title="SAT Boxplot") +
+   theme(plot.title = element_text(hjust = 0.5))
+
+```

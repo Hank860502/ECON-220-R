@@ -1,0 +1,100 @@
+---
+title: "Central Limit Theorem, interactive graphs and kable"
+author: "YOU"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+library(tidyverse)
+library(plotly)
+```
+
+ Objectives
+
+In this class we will learn the following
+* Prove the CLT using R
+* The use of the `kable()` function 
+* How to make a ggplot grpah interactive using `plotly()`. 
+
+ Central Limit Theorem 
+
+The central limit theorem states that: 
+The sample mean will be approximately normally distributed for large sample sizes, regardless of the distribution from which we are sampling.
+
+We are going to prove this in R
+
+Steps:
+
+* set.seed(53)
+* We will use the Poisson distribution, this distribution has a parameter lamba $\lambda$ which is also the population mean. Set lamba=5 
+* We are going to create 1000 samples of 40 observation from the possion distribution for this we need: rwos represent the number of samples, n the size.
+* Using n*rows for the sample size generate the random sample using `rpois(n, lambda)` call this object sim. 
+* Make this into a matrix see code
+* Let's see what the mean is for each of our 1000 samples. Create an object sample.means using the function `rowMeans()` that calculates the mean of everyrow in our matrix 
+* Calculate the mean and standard deviations of all the previously estimated sample means. Name the objects sm.avg sm.sd.
+* Take a look at these values in your global enviroment. What can you say with respect to the CLT statement. 
+* Create a table with relevant values using `kable()`
+* Create a histogram of the sample means and plot the normal distribution on top of it. 
+ 
+
+```{r}
+set.seed(53)
+lambda <- 5
+
+n <- 100 ; rows <- 1000
+# we start with an underlying distribution that is not normal
+ # The parameter for the poisson distribution 
+ # 1,000 trials samplesize 40 each You can use ; to separate two instructions in one line of code. 
+sim<-rpois(n*rows, lambda)
+m <- matrix(sim, rows)
+
+#Mean of every sample 
+sample.means<-rowMeans(m)
+
+# Calculate the mean and sd of all means 
+sm.avg<-mean(sample.means) ; sm.sd<-sd(sample.means)
+sm.sd.clt<-sqrt(lambda/n) # Theoretically expected estandard deviation of the distribution of the sample means 
+# notice how close the standard deviation that we calculated and sm.sd.clt are. If our sample size is suficiently large and we run enough trials that is going to generally be the case.  
+```
+
+ Using kable to present results 
+
+Let's put all the relevant numbers from our exercise, lambda, the sample means, the sd into a nice looking table using the funtion `kable()` 
+In the console type `?kable` and run this code to see the documentation. 
+
+
+```{r, results='asis'}
+# create a vector with lambda, sm.avg, sm.sd, sm.sd.clt
+data<-c(lambda, sm.avg,sm.sd,sm.sd.clt)
+names(data)<-c("lambda", "sm.avg","sm.sd","sm.sd.clt")
+# use the function names() to name the objects so when we do the table it looks look  
+names(data)
+# put the data into a table using kable and set the digits=2 so we dont see that many decimals
+kable(data, digits=2) 
+```
+
+ Interactive Histogram `ggplotly()`
+
+Ploting a histogram of all the means in our sample and make it interactive with ggplotly
+This allows us to see how the distribution of the sample means converges to the normal distribution. Plot the histogram of all the sample means and the normal distribution with mean=lambda and sd 
+
+```{r, fig.cap = "CLT Histogram"}
+# Let's plot all the sample means in a histogram and plot also the normal distribution 
+#store our sample.means into a dataframe to be able to feed this data into ggplot
+
+samplemeans<-data.frame(sample.means)
+
+p<-ggplot(samplemeans, aes(sample.means))+ # create p a histogram of the sample.mean
+geom_histogram(aes(y=..density..), breaks=seq(4,6,by=0.1),fill="green") + # make the histogram show the density on the y axis, and the bins from 4 to 6 by=0.1 or bins=12, the bins should be lavender color
+  geom_vline(xintercept = 5, linetype="dotted", color = "blue", size=1.5) + # use geom_vline to draw a vertical line right were 5=lamba is. make this line a blue dotted of size 1.5
+  geom_density(col=4) +  #add a layer geom_density that shows the desnity function, this will allow to see that the distribiution of the sample means
+  stat_function(fun = dnorm, args = list(mean = sm.avg, sd = sm.sd), col=2) + # use the layer stat_function to plot the normal distribution function with arguments sm.avg for the mean and sm.sd for thr sd, make it col=2,red. 
+  labs(title="Histogram for sample means")+ # use labs for the title of the graph
+  annotate("text", label = "Normal(5, 3.5)", x = 5.5, y = 0.8, size = 2, col = 2)+ # anoteta allows you to add text to your graph
+  theme_classic() # change the theme to classic
+# use function ggploty() to mak ep interactive.  
+ggplotly(p)
+```
+

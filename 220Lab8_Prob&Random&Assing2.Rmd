@@ -1,0 +1,196 @@
+---
+title: "Probability Functions and Number Generation"
+author: "Hank Chen"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: 
+  prettydoc::html_pretty:
+    theme: architect
+    toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=50),tidy=TRUE)
+#install.packages(tidyverse) remember this package should be already install. Packages are installed in this chunk so 
+library(tidyverse)
+
+```
+# Probability Distribution Functions in R.  
+
+Every distribution that R handles has four functions. There is a root name, for example, the root name for the normal distribution is norm. This root is prefixed by one of the letters
+
+* p for "probability", the cumulative distribution function (c. d. f.)
+* q for "quantile", the inverse c. d. f.
+* d for "density", the density function (p. f. or p. d. f.)
+* r for "random", a random variable having the specified distribution
+
+
+Distributions | Functions 
+--------------|----------
+Binomial |	pbinom	qbinom	dbinom	rbinom
+Uniform	| punif	qunif	dunif	runif
+Normal |	pnorm	qnorm	dnorm	rnorm
+Geometric	| pgeom	qgeom	dgeom	rgeom
+Hypergeometric |	phyper	qhyper	dhyper	rhyper
+Chi-Square |	pchisq	qchisq	dchisq	rchisq
+Exponential |	pexp	qexp	dexp	rexp
+F  | 	pf	qf	df	rf
+Student  | t	pt	qt	dt	rt
+Negative | Binomial	pnbinom	qnbinom	dnbinom	rnbinom
+Poisson	| ppois	qpois	dpois	rpois
+
+
+## Random number generation
+
+In class you have learned about different probability distributions.
+You can draw random numbers from existing distributions. It means that you can generate a set of random numbers that follow a specific distribution function.  Using R as the root and the abreviation for the specific distribution you can generate the random numbers, see examples below. 
+
+## The Uniform Distribution
+Were every value between a specified minimun and a maximun has an equal probability of ocurrence. the function in R that allows you to do that is `runif(n, min, max)`
+```{r}
+set.seed(123)
+runif(1)
+
+# Get a vector of 4 numbers
+runif(4)
+
+# Get a vector of 3 numbers from 0 to 100
+runif(3, min=0, max=100)
+
+# Get 5 integers from 0 to 100
+# Use max=101 because it will never actually equal 101
+data1<-floor(runif(5, min=0, max=101))
+# look at the object data in the enviroment
+```
+
+The sample function also generates random numbers.
+```{r}
+# This will do the same thing as the last code above, WITH replacement. 
+# sample(1:100, 10, replace=TRUE)
+
+# To generate integers WITHOUT replacement:
+# sample(1:100, 10, replace=FALSE)
+
+# You can also create a sample out a data set. 
+# sample(data1, 10, replace=FALSE)
+```
+
+## The Normal distribution 
+To generate numbers from a normal distribution, use rnorm(). 
+
+```{r}
+# By default the mean is 0 and the standard deviation is 1.
+set.seed(45)
+rnorm(4)
+
+# Use a different mean and standard deviation
+rnorm(4, mean=50, sd=10)
+
+```
+
+# More graphs with ggplot 
+
+Two type of graphs allow you to show the distribution of a variable.
+
+##  Histogram and Bar graph 
+
+A histogram is bar graph that shows the frequency of occurence of each value. 
+
+```{r}
+# To check that the distribution looks right, make a histogram of the numbers
+set.seed(45)
+x <- rnorm(400, mean=50, sd=10)
+# Using the basic R graphs hist() create a histogram
+hist(x)
+# Using qplot 
+qplot(x, geom="histogram")
+
+y <- rnorm(400, mean=5, sd=0.5)
+
+# To use ggplot you need your data in a data frame structure, that is the only way to feed data into ggplot.
+dat<-data.frame(x,y)
+
+```
+
+
+```{r}
+# A bar graph in ggplot 
+ggplot(dat, aes(x))+
+  geom_bar(stat='bin', fill="green", alpha=0.5)+
+labs(title="Histogram of X")+ theme(plot.title = element_text(hjust = 0.5))
+
+# A histogram in ggplot 
+ggplot(dat, aes(x))+
+  geom_histogram(fill="green", alpha=0.5)+
+labs(title="Histogram of X")+ theme(plot.title = element_text(hjust = 0.5))
+
+#See they look the same
+```
+# Making a better histogram
+```{r}
+
+# Once you create your graph you see a warning about the bins change that using breaks=seq()
+# Here you also change the y axis to be the density instead of the frequency. 
+ggplot(dat, aes(x))+
+geom_histogram(aes(y =..density..), fill="green", breaks=seq(20, 80, by = 2), col="red", alpha = .2)+ geom_density(col=2) + 
+labs(title="Histogram of X")+ theme(plot.title = element_text(hjust = 0.5))
+
+#Now you want to change the attribute fill= so that it incorporates de information about the number (count) of observation in that range.
+#Here you are also removing the atribute color from the geom_hist adding the geom_density() with the color attribute being equal to 3 
+ggplot(dat, aes(x))+
+geom_histogram(aes(y =..density.., fill=..count..), breaks=seq(20, 80, by = 2), alpha = .8)+ geom_density(col=3) + labs(title="Histogram of X")+ theme(plot.title = element_text(hjust = 0.5))
+```
+
+# Boxplot 
+
+A boxplot is also a graph that provides a visualization about the distribution of your variable of vector 
+
+Below a boxplot for the avg_SAT in our college data. 
+
+```{r}
+college <- read.csv("http://672258.youcanlearnit.net/college.csv")  
+
+# Box plot
+ggplot(data=college, aes(x="",  y=sat_avg))+
+  geom_boxplot(fill="green", alpha=0.5)+
+labs(title="SAT Boxplot") +
+   theme(plot.title = element_text(hjust = 0.5))
+
+
+# Boxplot that incorporates  separates the sat in public and private showing the distribution and also assigns the control variable to the atribute fill so each on has a different color. 
+ggplot(data=college, aes(x=control,  y=sat_avg, fill=control))+
+  geom_boxplot( alpha=0.5)+
+labs(title="SAT Boxplot") +
+   theme(plot.title = element_text(hjust = 0.5))
+
+ggplot(data=college, aes(x=control,  y=tuition, color=control))+
+  geom_boxplot()+
+labs(title="SAT Boxplot") +
+   theme(plot.title = element_text(hjust = 0.5))
+
+
+```
+
+
+# Your turn Assingment 2 
+
+Play around with this functions, start by looking at the documentation in R. For example ?punif  or ?qnorm ? sample 
+
+* Create a new Rmardown document 
+
+* Generate a vector y of 100 observations from the normal distribution with mean=3 and standart deviation sd=7 
+
+* Generate a vector z of 100 observations from the normal distribution with mean=7 and sd=3
+
+* Generate a vector u of 100 observations from the uniform distribution 
+* Generate a vector v of 100 observations of integers between 0 to 500 without replacement 
+* Make a histogram of y and v 
+* Make a box plot of z 
+* Using the data from college make a boxplot of the average faculty salary separate by public and private universities
+
+```{r}
+set.seed(245)
+```
+
+
+

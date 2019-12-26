@@ -1,0 +1,144 @@
+---
+title: "Graphs in R ggplot package"
+author: "Paloma L. Moyano"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    df_print: paged
+    toc: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(foreign)
+```
+
+## Graphs with R `ggplot2` package
+
+Graphics are built upon underlying grammar. The essential grammatical elements of a plot are: 
+
+Element    | Description | Layer 
+-----------|-------------|------
+Data       | The dataset being plotted | First layer
+Aestetics  | The scales onto which we map our data | Second layer , `aes()`
+Geometries | The visual elements used for our data | Third layer `geom_XXX()`
+
+
+A graph in R is built upon layers. The table above explains the first three essential layers, the more complex and optional layers are, `facets` which dictates how to separate our plots , the statistic layer can be use to calculate and add diferent parameters, next the coordinates layer, finally the themes layer to add nice looking and meaningful features. After the `ggplot` basic, layers are added using the + sign. 
+
+## 
+Let's call the packages that we need, import the data and do some manipulations to it. 
+```{r , echo=F}
+# reads a csv file from a source in this case online.   
+college <- read.csv("http://672258.youcanlearnit.net/college.csv")  
+str(college)
+# Transform some of the variable of our interest into factors. 
+# use the code var=as.factor(var) inside the mutate verb to change the variable state, region, highest_degree, control and gender into factor and with a similar function make the loan_default_rate numeric. 
+
+```
+
+## Scatterplot   `geom_point()`
+Let's start building a graph from the most simple layer and make it to look better. A graph should tell story about your information, 
+```{r}
+ggplot() # first layer noting is in it blank
+ggplot(data=college) # Now we call the data, still blank we are not telling a story yet
+ggplot(data=college, mapping=aes(x=tuition, y=sat_avg)) +
+  geom_point() # Here we add the layer of aestetics and the layer of geometrics we are doing a scatter plot that relates tuition with sat_avg
+```
+## Changing the aesthetics 
+You can change the aesthetics `aes()` by adding color, size, shape, linetype and transparency among other things. You can have `aes()` in the main ggplot layer or in the `geom_XXX()` layer it depends on what you want. The difference is that when the aes are set in the original ggplot, they are inherited by any other geom's that build on top of it. If you specify the aes only in a geom, it will only be used in that geom. If you use any specific aes in geom, they override the settings in ggplot.
+
+Let's change the previous plot by adding different colors for public and private universities, control variable and add some transparency to it with alpha=0.5. 
+
+Pay attention of the difference between color in the aesthetic vs color as an attribute.
+
+```{r}
+# Notice the difference of adding color in the aesthetic vs adding color as an attribute
+ggplot(data=college, mapping=aes(x=tuition, y=sat_avg)) +
+  geom_point(alpha=0.5)
+ggplot(data=college, mapping=aes(x=tuition, y=sat_avg, color="red")) +
+  geom_point(alpha=0.5)
+ggplot(data=college, mapping=aes(x=tuition, y=sat_avg, color=control)) +
+  geom_point(alpha=0.5)
+```
+
+## Telling a story. 
+You can see for the previous plot that the relationship between tuition and average SAT is different between public and private. Use the graph to tell that story. Check the correlation and covariance for all and then separate for each group and add a line to plot that suggest that different correlation. 
+**Hint**: Use the %>% and a verb from dplyr to find the correlation by group. 
+
+
+```{r}
+# The function cor allows you to look at the correlation coefficient between two variables. 
+cor(college$sat_avg, college$tuition)
+ 
+#Now using the package dplyr finde the average sat_avg and tuition and the correlation between those two by public and private university the variable control contains that info. 
+ 
+```
+
+Now let's try to add a straight line to our graph to tell the story of the possible relation between this variables. Also, let's change the axis and make tuition on the y axis and SAT on the x axis.
+
+```{r}
+ggplot(data=college, mapping=aes(x=sat_avg,y=tuition, color=control)) +
+  geom_point(alpha=0.5)+
+  geom_smooth(method='lm')
+
+```
+### Your turn 
+
+Calculate the correlation between tuition and faculty salary and make a graph of it also separated by public and private. add a fitted line that show the direccion of this relationship. 
+
+```{r}
+college %>% summarize(cor(faculty_salary_avg, tuition))
+college %>% group_by(control)%>% summarize(cor(faculty_salary_avg, tuition))
+
+ggplot(data=college, mapping=aes(tuition, faculty_salary_avg, color=control)) +
+  geom_point(alpha=0.5)+
+  geom_smooth(method='lm')
+
+
+```
+
+After you understand that ggplot works by layering the different components in a graph you can make graphs with different geometries depending on the story you need to tell. 
+
+Later in the semester we will learn other important graphs like bar, histogram, boxplot and times series line. Today we will focus on scatter plot what we just ilustrate above and column graphs. 
+
+## Column graph `geom_col()`
+
+In the column graph you can specify what appears on the y axis. 
+
+Let's say I would like to know the average tuition by degree. First we need to modify the data to get that info for the graph. Complete the blanks below. See how you can combine the package dplyr to create an object with the package ggplot to make a grpah with the information form tha object 
+
+```{r}
+college %>%
+  group_by(highest_degree) %>%
+  summarize(average_tuition=mean(tuition)) %>%
+  ggplot(mapping=aes(x=highest_degree, y=average_tuition)) +
+  geom_col(full="red", alpha=0.7) +
+  ylab("Average Tuition") + xlab("Degree")+
+  ggtitle("Average Tuition") +
+   theme(plot.title = element_text(hjust = 0.5)) 
+# the last line of code 
+```
+
+Now you can practice 
+
+* Using the package dplyr, make a column graph that shows the average tuition by region and public or private school. After this simple graphs get ready to learn a few trick to make a very cool graph with tons fo information in it.  
+```{r}
+college %>%
+  group_by(control, region) %>%
+  summarize(average_tuition=round(mean(tuition)), 0) %>%
+  ggplot(mapping=aes(x=region, y=average_tuition, fill=control, label=average_tuition)) +
+  geom_col() +
+  geom_text(size=4, fontface=2, color="yellow", position=position_stack(vjust=0.5))+
+  ylab("Average Tuition") + xlab("Region")+
+  ggtitle("Average Tuition by Region and Type of School") +
+   theme(plot.title = element_text(hjust = 0.5)) 
+```
+
+

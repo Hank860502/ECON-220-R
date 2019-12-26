@@ -1,0 +1,205 @@
+---
+title: "Time Series Graphs and gganimate"
+#author: "Paloma Lopezdemesa"
+#date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    code_folding: show
+    theme: flatly
+    toc: yes
+  pdf_document: 
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+library(tidyverse)
+library(gapminder)
+library(knitr)
+library(gtools)
+library(gifski)
+
+# to remove scientific notation 
+  options("scipen"=100, "digits"=4)
+```
+
+## Time series data
+
+### geom_line 
+ 
+Graphs for time series data geom_line, geom_area, stats_smooth()
+In economics you often need to do graphs of a time series in a line. 
+Let's move on and use the `economics` dataset to make a time series graph of the unemployment as proportion of the population in time in The U.S. 
+
+```{r}
+# we will work with the dataset economics check what is in it
+?economics 
+data("economics")
+head(economics)
+# using geom_line make a graph that show the evolution of unemployment over the years x= date y=pop/unemployment
+# name this graph time, make the line red and print the graph. 
+
+(time<-ggplot(data=economics) + 
+  geom_line(aes(x=date, y=pop/unemploy), color="red"))
+```
+
+
+```{r}
+
+#In the same graph change the size of the line by  pop/unemploy
+(time<-ggplot(data=economics) + 
+  geom_line(aes(x=date, y=pop/unemploy, size=pop/unemploy),  color="red")) 
+
+# Add another line of that represents the median duration of unemployment, in weeks, evolution in time add a title "Unemployment" and label the y axis "Unempl"
+
+time+ geom_line(aes(x=date, y=uempmed), color="blue")+
+  labs(title="Unemployment")+ ylab("Unempl")+theme_classic()
+```
+
+### geom_area & stat_smooth()
+
+```{r}
+# graphs 
+timearea<-ggplot(data=economics) + 
+  geom_area(aes(x=date, y=pop/unemploy), fill="red", col=2, alpha=0.5) 
+
+# add another area and use stat_smooth() to show a smooth trend line.
+timearea + 
+  geom_area(aes(x=date, y=uempmed), fill=4, col=4, alpha=0.4)+ stat_smooth(aes(x=date, y=pop/unemploy),
+  color = "#FC4E07", fill = "#FC4E07",
+  method = "loess"
+  )+
+  labs(title="Unemployment")+ ylab("Unempl")+theme_bw()
+```
+
+# gganimate package
+
+Part of this handout is based on [the gganimate website](https://gganimate.com/articles/gganimate.html)
+
+## Transitions {.tabset .tabset-fade .tabset-pills}
+
+With just a small addition you can convert a static plot into a complex animation. 
+Transitions are functions that interpret the data in your graph in a way that ins distributed into a number of frames.  
+
+
+### Reaveal
+Letting the data gradually appear with with `transition_reveal()`
+
+```{r}
+static<-ggplot(data=economics, aes(x=date, y=pop/unemploy)) + 
+  geom_line(color="red")
+data.frame(economics)
+library(gganimate)
+static +
+  transition_reveal(date) #reveal by date
+```
+
+
+```{r}
+static +
+  geom_point() +
+  transition_reveal(date)
+  
+```
+
+
+
+### States
+
+`transition_states()` specifically splits the data into subsets based on a variable in the data.
+
+
+
+```{r}
+college <- data.frame(read.csv("http://672258.youcanlearnit.net/college.csv") ) 
+barstatic<-college %>%
+  group_by(control, region) %>%
+  summarize(average_tuition=round(mean(tuition), 0)) %>%
+  ggplot(mapping=aes(x=region, y=average_tuition, fill=control, label=average_tuition)) +
+  geom_col()+
+  geom_text(size=4, fontface=2, color="yellow", position = position_stack(vjust = 0.5))+
+  ylab("Average Tuition") + xlab("Region")+
+  ggtitle("Average Tuition by Region and Type of School") +
+  theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+```{r}
+barstatic + transition_states(region, wrap = FALSE) +
+  shadow_mark()
+```
+
+
+```{r}
+barstatic + transition_states(control, wrap = TRUE)+
+  shadow_mark()
+```
+```{r}
+barstatic + transition_states(control, wrap = FALSE)
+```
+
+### Labelling, time, ease_aes()
+
+An animated graphs like any visualization is only good if it conveys the information right. Providing the an indication as to what each frame or point in time refers to is important. The information about the each frame is created by gganimate and can be inserted in the labels option by embedding them in curly braces which are then evaluated and inserted into the argument string. See example
+
+
+`transition_time()` transitions to differents states according to a time variable
+`ease_aes()` defines the velocity with which aesthetics change during an animation.
+
+```{r}
+ggplot(gapminder, aes(gdpPercap, lifeExp, size = pop, colour = country)) +
+  geom_point(alpha = 0.7, show.legend = FALSE) +
+  scale_colour_manual(values = country_colors) +
+  scale_size(range = c(2, 12)) +
+  scale_x_log10() +
+  facet_wrap(~continent) +
+  # Here comes the gganimate specific bits
+  labs(title = 'Year: {frame_time}', x = 'GDP per capita', y = 'life expectancy') +
+  transition_time(year) +
+  ease_aes('linear') # 
+```
+
+***
+<style>
+div.gray { background-color:#dbdbdb; border-radius: 5px; padding: 20px;}
+</style>
+<div class = "gray">
+
+**Packages used in this document**
+
+ Make sure you gave the package devtools, gganimate, gifski installed
+ 
+ `library(tidyverse)`
+
+`library(gapminder)`
+
+`library(knitr)`
+
+`library(gtools)`
+
+`library(gganimate)`
+
+
+</div>
+
+
+
+
+&nbsp;
+
+<hr />
+
+<p style="text-align: center;">ECON320 R Programing Laboratory</a></p>
+<p style="text-align: center;">Professor <em> Paloma Lopez de mesa Moyano</em></a></p>
+<p style="text-align: center;"><span style="color: #6666FF;"><em>paloma.moyano@emory.edu</em></span></p>
+
+<p style="text-align: center;">Department of Economics</a></p>
+<p style="text-align: center;">Emory University</a></p>
+
+&nbsp;
+    
+    
+
+
+

@@ -1,0 +1,89 @@
+---
+title: "Entering Data into R"
+author: "Paloma Lopez de mesa Moyano"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:
+    toc: true 
+    toc_depth: 3 
+    number_sections: false  
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Understanding data structures in R. 
+
+You learnt how to create create objects in R. Vectors, Matrices and Data frames. In statistics and econometrics you will be working with data sets, these are comprised of observations and variables asociated with them. A data frame is the fundamental data structure in R to store tipical data sets. A data frame is rectangular grid, a structure that presents data in rows and columns similar to a spreadsheet. The columns are called variables, they are basically vectors and the rows are called observations, like in a regular dataset.
+
+Let's learn a few new functions and put in practice what we know about dataframes and objects in R. 
+
+# The rep(), seq() functions
+
+Some vectors follow a patern and these functions allow you to create those faster. 
+
+```{r, eval=FALSE}
+rep(x, times) # x is the object that you need to repeat, the next argument times gives the non negative number of times the object x should be repated
+
+seq(from, to, by= increment sequence)
+```
+
+# Exercise 1 
+
+* Create a vector of lenght 10 that repeats the number 5, name this vector x  
+* Create a vector with all the numbers from 2 to 20 in increments of 2, name this vector y
+* Use the option results='hold', to have the results apearing all at the same time in your document. 
+* Using parenthesis in your line of code prints your output with out retyping the object. Now try doing this for both x and y.
+
+```{r}
+(x<-rep(5,10))
+y<-seq(from=2, to=20, by=2)
+y
+```
+
+
+```{r, results='hold'}
+(x<-rep(5,10))
+(y<-seq(2,20,2))
+```
+
+
+# Create a Dataframe based on the following table 
+
+See the table below. It contains the information of the score that students obtained when two different reinforcement methods were used. 
+
+Male  |	| Female 
+--------|---------|--------|-------
+Electric Shock |	Being Nice |	Electric Shock |	Being Nice
+15 | 10 | 6 | 12
+14 | 9 |	7 |	10
+29 | 8 |	5 |	7
+13 | 8 | 4	| 8
+13 | 7 | 8	| 13
+
+
+Use the information of this table to create a dataframe in R that has the adequate structure. Observations in the rows and atributes in the columns. 
+
+Use the function rep() when necessary, and also use factor for the object that contains the sex information. 
+
+Let's think about the steps to make this data into a data frame. 
+
+* We have three atributes 3 attributes in the data set: sex (where M:= male; F:= female), reinforcement method (where ES:= electric shock; BG:= being nice), and performance/score (positive integer values). We need one vector per atribute 
+
+```{r}
+sex_vector<-c(rep("M",10), rep("F", 10))
+reinf_method<-c(rep("ES",5), rep("BN", 5),rep("ES",5), rep("BN",5))
+sex_vector<-factor(sex_vector, order=FALSE)
+labels=c("Female", "Male")
+
+
+
+```
+
+```{r}
+reinforcement_df<-data.frame(score,reinf_method,sex_vector) 
+```
+
+

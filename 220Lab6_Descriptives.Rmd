@@ -1,0 +1,149 @@
+---
+title: "Lab6 Descriptives with dplyr and Cleaning Data Editing"
+author: "Dr. Paloma L. Moyano"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document: 
+    theme: readable
+    toc: yes
+  word_document:
+     toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(tidy.opts=list(width.cutoff=50),tidy=TRUE)
+library(tidyverse)
+```
+
+# 1 Probabilities of an event
+
+The function `choose(n, k)` in R allows you to choose k elements out of a set of n. 
+For example: 
+*Choose 7 apples out a bag of 10 apples 5 red 5 green 
+*Event G: Choose exactly 2 green apples 
+
+```{r}
+n_apples<-choose(10,7)
+n_g<-choose(5,3)*choose(5,2)
+n_apples
+n_g
+```
+
+Let's practice 
+* Define an experiment: Choose any five representatives out of 20 where 8 are males and 12 are females. Name this object n_s that contains those 5 representatives. 
+* Define event A: Choose exactly three female representatives create an object n_a that represens event A 
+* Calculate the probability of A happening, name it prob_a
+
+To create the chunk of code Ctr+Alt+i and start writing your code
+
+```{r}
+(n_s<-choose(20,5))
+(n_a<-choose(12,3)*choose(8,2))
+(prob_a <- n_a/n_s)
+```
+
+
+# 2 Compute mean, median, variance and correlation 
+
+Let's say you have two variables `j` and `k` the table below tells you the functions in R to calculate these descriptive statistics
+
+Statistic | Function in R | Alternatives
+------------- | ------------- | --------
+Mean of `j`  | mean(j) | sum(j)/lenght(j)
+Median of `j` | median(j) |
+Variance of `j` | var(j) | sum((j - mean(j))^2)/length(j) | var(j)*((length(j)-1)/lenght(j))
+Standard deviation of `j` | sd(j) | sqrt(var(j))
+Correlation of `j` and `k` | cor(j, k) |
+Covariance of `j` and `k` | cov( j, k) |
+
+
+Remember you can use the package the %>% option in the package dplyr to manipulate your data and obtain these using summarise and summarise_all 
+
+```{r, eval=FALSE}
+df # lest say you have a dataframe called df
+df %>% summarise_all(funs(mean, var)) # this takes all the variables in your dataframe and applies the functions mean and variance to them 
+mean(df$variable) # this will give you the mean of the specific variable in your dataframe 
+```
+
+For the following examples we will use data from DASL about the fat content of different burger brands, this data is in text and we can load it into R using the code below.
+
+```{r}
+burgers <- read.table("https://dasl.datadescription.com/download/data/3088.txt", header = TRUE)
+```
+
+* Compute the mean of all variables. 
+
+* Find the correlation between Fat and Sodium. Name the object cor_fs
+
+* Compute the standard deviation of Calories. Name the object sdCal
+
+* Calculate the variance of Sodium and Calories and the covariance of those two
+
+Create your chunk of code here
+```{r, }
+burgers %>% summarise_all(mean)
+burgers %>% summarise(cor_fs=cor(Fat, Sodium), sdCal=sd(Calories), var(Sodium), var(Calories), cov(Sodium, Calories))
+```
+
+
+Let's look at an exmaple with F2019 student data
+
+```{r}
+
+load("~/Desktop/EMORY2019Fall/econ220/Econ220DataF2019_ano.Rdata")
+# Let's give it another name so it is easier to work with it.
+Prodata<-Econ220DataF2019_ano
+
+#cleaning the q182 variable about travelling
+class(Prodata$q182)
+data.frame(table(Prodata$q182))
+Prodata$q182[Prodata$q182=="1 time"]<-1
+Prodata$q182[Prodata$q182=="2-3"]<-2.5
+Prodata$q182[Prodata$q182=="2-3 times"]<-2.5
+Prodata$q182[Prodata$q182=="3 times"]<-3
+Prodata$q182[Prodata$q182=="4 times"]<-4
+Prodata$q182[Prodata$q182=="5+"]<-5
+Prodata$q182[Prodata$q182=="once per semester"]<-1
+Prodata$q182[Prodata$q182=="Three"]<-3
+Prodata$q182[Prodata$q182=="twice"]<-2
+Prodata$q182 <- as.numeric(Prodata$q182,na.rm = TRUE)
+summary(Prodata$q182)
+
+Prodata
+Prodata<-Prodata %>% filter(!is.na(year))
+table(Prodata$year)
+Prodata$year<-ordered(Prodata$year, levels=c("Freshmen","Sophomore","Junior","Senior"))
+Prodata  %>% group_by(year)%>% summarize(mean(q182, na.rm=TRUE))
+levels(Prodata$year)
+class(Prodata$q182)
+mean(Prodata$q182)
+Prodata %>% filter(!is.na(year))  %>% group_by(year)%>% summarize(averagetravel=round(mean(q182, na.rm=TRUE),3))
+
+data.frame(table(Prodata$q15))
+
+# Editing string in 
+#sub(old, new, string)
+#gsub(old, new, string)
+
+Prodata$q15<-gsub("^<|\\hour|\\hours|\\h|\\minutes", "", Prodata$q15) 
+data.frame(table(Prodata$q15))
+Prodata$q15<-as.numeric(Prodata$q15)
+data.frame(table(Prodata$q15))
+Prodata$q15[Prodata$q15==40]<-40/60
+data.frame(table(Prodata$q15))
+
+#A function to replace strings. 
+#str_replace_all(string, pattern, replacement)
+# simple example 
+fruits <- c("one apple", "two pears", "three bananas")
+fruits %>%
+  str_replace_all(c("one" = "1", "two" = "2", "three" = "3"))
+
+# Let's do it on variable for major
+Prodata$major<-str_replace_all(Prodata$major, "Economics", "THE BEST")
+#View(Prodata$major)
+```
+

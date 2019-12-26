@@ -1,0 +1,104 @@
+---
+title: "R List of functions econ220"
+#author: "Paloma Lopezdemesa"
+output: 
+  html_document: 
+    theme: yeti
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+In this assignment you have to make an exhaustive list with all the functions/ expressions learned during the semester and add at least 5 that we did not learn and that you think are usefull for you and your classmates. 
+You have to complete the empty spaces in the tables, add the functions that we learned that are not here, and add some extra. Do your best, do not think about the grade this is a learning exercise, think that you are making your own cheatsheet for this class. You can add useful links to online resources. See how it is done below. 
+
+Here is a good online source for Rmardown: [The Definitive Guide](https://bookdown.org/yihui/rmarkdown/)
+Take a look at [the cheatsheets](https://www.datacamp.com/community/data-science-cheatsheets) those can be helpful.
+
+
+
+# Rmarkdown 
+
+options | default | effect
+--------|---------|---------
+`eval`   |TRUE |Whether to evaluate the code and include its results
+`echo` | TRUE | Whether to display code along with its results 
+`warning` | TRUE | Whether to display warningserrorFALSEWhether to display errors
+`message` | TRUE | Whether to display messages
+`tidy` | FALSE | Whether to reformat code in a tidy way when displaying it 
+`results` | "markup" | "markup", "asis", "hold", or "hide"
+`cache` | FALSE | Whether to cache results for future renders
+`comment` | "##" | Comment character to preface results with
+`fig.width7` | Width in inches for plots created in chunk
+fig.height7 | Height in inches for plots created in chunk
+
+# Importing data 
+Steps: Describe the steps here  complete the list. 
+
+
+Function | Result
+---------|---------
+`read_dta()` | Imports data from STATA format, uses package haven
+
+
+
+# Functions 
+
+Function | Result
+---------|---------
+ `&` | and
+ `|` | or
+`!` | not
+`<` | less than
+`>`  | greater than
+`^`  | power
+`mean(x)` | mean of a sample, $\bar{X} = \sum_{i=1}^n X_i/n$
+ `sd(x)`         | standard deviation of a sample $s_x = \sqrt{\sum_{i=1}^n (X_i-\bar{X})^2 / (n-1)}$
+ `var(x)`        | variance of a sample $s_x^2 = \sum_{i=1}^n (X_i-\bar{X})^2 / (n-1)$
+`cov(x, y)` | Sample covariance of two variables $s_{x,y} = \sum_{i=1}^n (X_i - \bar{X})(Y_i - \bar{Y}) / (n-1)$
+`sqrt(x)`           | Square root of a number
+`length()` | Number of observations in a vector
+`is.XXXX()` | Functions to test inheritance relationships between an object and a class or between two classes (extends)
+`t.test()` | Perform a one- or two-sample *t* test
+
+# Dplyr verbs 
+## Pipe operator: [*%>%* (*then*)](https://magrittr.tidyverse.org/)
+Explain the pipe operator 
+
+Verb | Purpose
+---------|---------
+`filter()`| choose rows/cases where conditions are true.
+`arrange()`           | order rows
+`select()`           | choose columns
+ `distinct()` | unique values of column(s)
+ `mutate()` and `transmute()` | Create new columns
+ `summarise()`             | Find a summary statistic
+ `sample_n()` | Take a random sample
+`group_by()`            | Creates groups based on the values or categories of a variable
+
+# ggplot grammar 
+There is a lot to complete here. Have fun !!!
+
+Layer | purpose
+------|--------
+`aes()` | look of the graph, describe how variables in the data are mapped to visual properties (aesthetics) of geoms
+`geom_bar()` | bar charts
+`geom_boxplot()` | The boxplot compactly displays the distribution of a continuous variable
+`geom_dotplot()` | Dot plot
+`geom_point()` | create scatterplots
+`geom_vline()` | add vertical reference lines
+`geom_violin()` | violin plot
+`coord_flip()` | rotate graph by 90 degree 
+`shape` | change the shape of point on graph
+`color` | change the color of differnt graph by either hard code or a coloumn in the data
+`scale_color_gradient()` | creates a two colour gradient (low-high)
+# More 
+Useful stuff | purpose
+------|--------
+`qplot` | quick plot
+`rep(5,10)` | return [1] 5 5 5 5 5 5 5 5 5 5
+`seq(from=2, to=20, by=2)`| Return [1]  2  4  6  8 10 12 14 16 18 20
+Ctrl + alt + i | create a block of code

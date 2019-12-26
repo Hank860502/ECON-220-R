@@ -1,0 +1,134 @@
+---
+title: "Assignment 1 Econ220"
+author: "Dr. Paloma Lopezdemesa"
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(ggplot2)
+```
+
+
+# Download data into R and Data Cleaning 
+
+We will work with variables race, sex, year, q8, q18, q22. First load the clean these variables so you can work with them.  
+
+```{r}
+# Load data into R, the data is already in R format
+load("~/Desktop/EMORY2019Fall/econ220/Econ220DataF2019_ano.Rdata")
+
+# Let's give it another name so it is easier to work with it and select the variables that we will use
+ProdataSample<-Econ220DataF2019_ano
+
+# rescale the numbers that are in text to a range 0-4
+ProdataSample$q17[ProdataSample$q17=="3.89/4.35"]<-3.57
+ProdataSample$q17[ProdataSample$q17=="3.9/4"]<-3.9
+ProdataSample$q17[ProdataSample$q17=="36/45 (International Baccalaureate)"]<-3.2
+ProdataSample$q17[ProdataSample$q17=="4.29/4.5"]<-3.81
+ProdataSample$q17[ProdataSample$q17=="4.3/4.5"]<-3.82
+ProdataSample$q17[ProdataSample$q17=="5.6/6.0"]<-3.73
+ProdataSample$q17[ProdataSample$q17=="8.5 out of 10"]<-3.4
+ProdataSample$q17[ProdataSample$q17=="95"]<-3.8
+ProdataSample$q17[ProdataSample$q17=="N/A"]<-NA
+# There are some numerical values that outside the range I asummed that the ones below 4.5 are in the 0-4.5 range. 
+#Only one value is 5 thisone get converted to 4
+ProdataSample$q17[ProdataSample$q17=="5"]<-4
+
+# Clean up q22 to understandable data
+ProdataSample$q22[ProdataSample$q22=="1&2"]<-2
+ProdataSample$q22[ProdataSample$q22=="2 times"]<-2
+ProdataSample$q22[ProdataSample$q22=="5-Apr"]<-5
+
+#make the variable numeric
+ProdataSample$q17<-as.numeric(ProdataSample$q17)
+ProdataSample$q22<-as.numeric(ProdataSample$q22)
+
+
+# use the function mutate and ifelse to change the values to waht you need
+# Example mutate(var1=ifelse(test_expression, x, y))
+# Here, test_expression must be a logical vector (or an object that can be coerced to logical). The return value is a vector with the same length as test_expression.
+ProdataSample<-ProdataSample %>% mutate(q17=ifelse(q17<=4,q17,q17*4/4.5))
+
+
+# Change the levels of the year variable so it has the right order. 
+ProdataSample$year <- ordered(ProdataSample$year,levels=c("Freshmen","Sophomore","Junior","Senior"))
+
+```
+
+# Descriptive statistics of the data 
+
+First make a summary of the data excluding a couple of factor variables. See below
+```{r}
+summary(select(ProdataSample, "year", "q8", "q17", "q22"))
+```
+
+Now let's look at statistics by sex. What is the mean and max of all these variables by sex? Use the function summarise_all() use the console to inderstand how this function works. You also have to deal with NA values. 
+
+```{r}
+# make the sex variable a factor
+ProdataSample$sex<- factor(ProdataSample$sex, level=c("Female", "Male"))
+# ProdataSample %>%select("sex","q22")%>% group_by(sex) 
+# Checking if men's mean in q22 has edge cases but couldn't found. Men's mean is not accurate for some reason...
+
+# Calculate the means and max
+ProdataSample%>%select("sex", "year", "q8", "q17", "q22") %>% na.omit() %>% group_by(sex) %>% summarise("q8_mean"= round(mean(q8),2),"q17_mean"= round(mean(q17),2),"q22_mean"= round(mean(q22),2),"q8_max"=max(q8), "q17_max"=max(q17), "q22_max"=max(q22))
+```
+
+What is the correlation between GPA and High School GPA by gender. 
+```{r}
+#use the knirt option warning to eliminate messages.
+ProdataSample%>%select("sex", "q8", "q17") %>% na.omit() %>% group_by(sex) %>% summarise("Cor_HSGPA_GPA" = round(cor(q8,q17),3))
+# dont know how to show third row NAs
+```
+
+# Graphs 
+Make the following graphs
+* Show the relationship between weekly workouts and GPA by gender and by year. Figure out how to get rid of the NA in the sex variable. 
+* Use a column graph to show the average workouts per week by gender. 
+* Use a column graph to show the average GPA by sex and race.  Figure out how to make the tick labels in the x axis look like the graph below. Hint: use scale_x_discrete() to modify the levels of the factor variable. 
+
+
+```{r, warning=FALSE}
+ProdataSample <- ProdataSample %>% 
+  filter(!is.na(q8))
+ggplot(data=ProdataSample, mapping=aes(x=q22, y=q8, color=sex))+ geom_point(alpha=0.5)+facet_wrap(~sex)
+```
+
+
+```{r, warning=FALSE}
+ProdataSample <- ProdataSample %>% 
+  filter(!is.na(year))
+ggplot(data=ProdataSample, mapping=aes(x=q8, y=q22, color=year))+ geom_point(alpha=0.5)+facet_wrap(~year)+ylab("Weekly Workouts") + xlab("GPA")+ coord_flip()+facet_grid(year~.)
+
+
+```
+
+```{r}
+ProdataSample %>%
+  filter(!is.na(q22)) %>% # need to remove the one na but can't change the actual dataset because later still need it
+  group_by(sex) %>%
+  summarize(Times_of_weekly_excercise=round(mean(q22),3)) %>%
+  ggplot(mapping=aes(x=sex, y=Times_of_weekly_excercise,label=Times_of_weekly_excercise,))+ 
+  geom_col(fill="green")+
+   geom_text(size=8, fontface=2, color="red", position = position_stack(vjust = 0.5))+
+  ylab("Times of weekly excercise") + xlab("Gender")+
+  ggtitle("Average weekly workouts by Gender") +
+   theme(plot.title = element_text(hjust = 0.5)) 
+# Male numbers somehow wrong
+```
+
+
+```{r}
+ProdataSample %>%
+  group_by(sex, race) %>%
+  summarize(gpa=round(mean(q8),3)) %>%
+  ggplot(mapping=aes(x=race, y=gpa,label=gpa, fill=sex))+ geom_col()+
+   geom_text(size=8, fontface=2, color="yellow", position = position_stack(vjust = 0.5))+
+  ylab("Current GPA") + xlab("Race")+
+  ggtitle("Average GPA by Race and Gender") +scale_x_discrete(labels=c("Asian", "Black", "Other", "White")) +
+   theme(plot.title = element_text(hjust = 0.5)) 
+```
+

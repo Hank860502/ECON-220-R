@@ -1,0 +1,197 @@
+---
+title: "Hank Chen Final Project Proposal"
+author: "Hank Chen"
+date: "10/18/2019"
+output:
+  prettydoc::html_pretty:
+    theme: leonids
+    
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+library(kableExtra)
+```
+
+<h2> Introduction to Research Idea</h2>
+I am interested in knowing if student-athletes are better in dealing with frustrations than those of other students. In order to make a observation of that, I need to first find the frustration factors of college students. In my research, we can see that the happiness of college students tends to have a positive relationship with their academic performances.  So in order to see whether student-athlets could better overcome frustrations, I am drawing the relationships between The success in athletic performance and the academic performances and the happiness level. In order to observe the relationships, I came up with three questions.<br/>
+
+<li>Q1. have you attend any kind of athletic varsity?<br/></li>
+<li>Q2. Rate the happiness you receive when participating in sports events?<br/></li>
+<li>Q3. What is your cumulative GPA?</br></li>
+
+The research questions were modified to fit the survey best and followed by are the questions that were prompt.</br>
+
+<ul>
+  <li>Question one is gathered from two questions</br>
+- q169: Do you participate in sports on campus  either varsity  club  or intermural?</br>
+- q230: Were you in any high school sport team?</br></li>
+<li>Question two is the level of overall happiness.</br>
+  - q10: How happy are you on a scale of 1 to 10</br></li>
+<li>Question three remains the same</br>
+  - q8 What is your cumulative GPA?</li>
+</ul>
+ 
+<h2> The Data Set</h2>
+```{r}
+# Load data into R, the data is already in R format
+load("~/Desktop/EMORY2019Fall/econ220/Econ220DataF2019_ano.Rdata")
+
+# Let's give it another name so it is easier to work with it.
+Prodata<-Econ220DataF2019_ano
+```
+
+Clean the dataset by removing all the NAs in the questions.
+```{r}
+Prodata<-Prodata %>% 
+  filter(!is.na(q8))
+Prodata<-Prodata %>% 
+  filter(!is.na(q169))
+Prodata<-Prodata %>% 
+  filter(!is.na(q230))
+Prodata<-Prodata %>% 
+  filter(!is.na(q10))
+
+# store the value of each question to a shorter variable
+gpa <- Prodata$q8
+happiness <- Prodata$q10
+```
+
+
+<h3> Identify the group of subjects</h3>
+
+ Compare the happiness level and GPA  of the subjects those have participated in sports team to those of people who had never participated in sports team
+
+```{r}
+# select all the people who have participated in sport teams at any given time, and call them athletes
+Prodata$athletes <- ifelse(Prodata$q169 == "Yes" | Prodata$q230 == "y", TRUE, FALSE)
+athletes <- Prodata %>% 
+  filter(q169 =="Yes" | q230 =="y")
+athletes_happiness <- athletes$q10
+athletes_gpa <- athletes$q8
+
+# select all the people who have never participate in any sport teams
+nonathletes <- Prodata %>% 
+  filter(q169=="No" & q230 =="n")
+nonathletes_happiness <- nonathletes$q10
+nonathletes_gpa <- nonathletes$q8
+
+summary(select(Prodata, "GPA"="q8", "happiness"="q10"))
+overviewtable<-table(Prodata$q230, Prodata$q169)
+rownames(overviewtable) <- c("Never active","Active before")
+colnames(overviewtable) <- c("Not on a team","On a team")
+headcounts<-kable(overviewtable, "html")%>%
+  kable_styling(full_width=FALSE, c("stripped","bordered", "hold_position"))%>%
+  add_header_above(c(" "=1, "Currently"=2))
+headcounts
+
+mean(athletes_happiness) - mean(nonathletes_happiness) # Comparing the happiness level of each group
+```
+From the result above, we can see that the average happiness of athletes are higher than those of non-athletes by almost 1 degree in a 1-10 scale. It is hard to conclude anything just with this information, but it laid a good foundation of our next step:
+
+<h3> Overall relationship between happiness and GPA </h3>
+I assumed that the happiness level of college students is correlated to their success in academic. So I drew a graph to visualize the correlation. 
+By observing the graph below, my thesis that college students' happiness are postively related to their academic performances is proveded. Which means <h6>the higher GPA a student gets, the happier he/she is.</h6> And with the understanding of this, I am taking weak performance in academic as the main factor of frustration for college students.
+
+```{r}
+ggplot(data=Prodata, mapping=aes(x=gpa, y=happiness))+
+  geom_point(alpha=0.5)+
+  geom_smooth(method='lm')
+```
+
+<h2>Two Sample T-test</h2>
+To strengthen the hypothesis, a two sample t-test will be conducted. The nullhypothesis is that the sample mean of happiness = sample mean of gpa, which means there are no significant differences between a student happiness and his/her acedemic performance.
+```{r}
+t.test(gpa, happiness,var.equal = FALSE)
+```
+
+Looking at the p-value of our t-test, we can see that the p-value is well below 0.05 which means we reject the null hypothesis. Therefore, the relationship between happiness level and gpa is proven to be closely related.
+
+<h5>Visualizing the difference between how athletes' happiness and gpa distributes differs from that of non-athletes</h5>
+```{r}
+ggplot(data=Prodata, mapping=aes(x=gpa, y=happiness, color=athletes))+
+  geom_point(alpha=0.5)+
+  geom_smooth(method='lm')+facet_wrap(~athletes)
+```
+```{r}
+ggplot(data=Prodata, aes(x=athletes,  y=happiness, color=athletes))+
+  geom_boxplot()+
+labs(title="GPA & Happiness Boxplot") +
+   theme(plot.title = element_text(hjust = 0.5))
+```
+<h2>Analysis</h2>
+By observing the graphs and table above we can see that the fluctuation in happiness are a lot less severe in those of athletes than those of non-athletes. This result supports my research question that the success in athletic performance closely related to the ability to deal with frustraitions. I believe that when student-athletes encounter frustrations, they won't define their happiness with those frustrations. On the other hand, students who never participated in sports tend to be more emorional with their success in academics.</br>
+Of course, there are many other points could be make with this graph, for example, the graph of the athletes shows that even with high GPA, many students are experiencing low happiness level. More points could be argue, however, in the next section of the project take I am going dive deeper to understand the correlation between athletes and their academic success in a much larger scale.
+
+<h2>Supporting Data</h2>
+National Collegiate Athletic Association(NCAA) provides the graduation rates of both student-athletes and those of overall students. I am going to use these datasets to support my thesis.<br/>
+[Link to the datasets](http://www.ncaa.org/about/resources/research/shared-ncaa-research-data)
+
+<h3> How </h3>
+Because the ultimate goal of the college experience is graduation, the NCAA has devoted attention to researching student-athlete graduation rates for more than two decades.
+
+All colleges and universities are required by NCAA legislation and federal law (the Student Right-to-Know act from 1990) to report student graduation rates, and those institutions offering athletics aid are required to report for their student-athletes as well. The NCAA acquires student-athlete graduation rate data from the Department of Education’s Integrated Post-Secondary Data System Graduation Rate Survey (IPEDS-GRS). IPEDS-GRS is the proportion of first-year, full-time student-athletes who entered a school on athletics aid and graduated from that institution within six years.  Therefore, I am defining the success in academic by whether an individual could graduate from a college with in six years.
+
+In this project, I am only interested in the athletes in Division 1, which is the highest competitive division among the others. I will create a few graphs to visualize the academic success rate of student-athletes and that of full-time students.
+
+```{r}
+simpleGSR = read.csv("simple.csv",
+           stringsAsFactor = FALSE)
+
+detailGSR = read.csv("detailed.csv",
+           stringsAsFactor = FALSE)
+
+overallGSR = read.csv("overall.csv",
+           stringsAsFactor = FALSE)
+overallGSR<-head(overallGSR,13) # rest of three rows not needed
+
+athletesMeanGSR <- detailGSR %>% select(21:33)%>% na.omit() %>% summarise("2011_Mean"=round(mean(GSR_2011),2), "2010_Mean"=round(mean(GSR_2010),2),"2009_Mean"=round(mean(GSR_2009),2),"2008_Mean"=round(mean(GSR_2008),2),"2007_Mean"=round(mean(GSR_2007),2),"2006_Mean"=round(mean(GSR_2006),2),"2005_Mean"=round(mean(GSR_2005),2),"2004_Mean"=round(mean(GSR_2004),2),"2003_Mean"=round(mean(GSR_2003),2),"2002_Mean"=round(mean(GSR_2002),2),"2001_Mean"=round(mean(GSR_2001),2),"2000_Mean"=round(mean(GSR_2000),2),"1999_Mean"=round(mean(GSR_1999),2))
+
+athletesMeanGSR <- t(athletesMeanGSR)
+colnames(athletesMeanGSR)<-"Mean"
+
+year<-factor(2011:1999) # create time span for new column
+athletesGSR<-data.frame(athletesMeanGSR, year)
+athleteGSRMean<-mean(athletesGSR$Mean) # average GSR for athletes
+
+overallGSR$Mean<-as.numeric(sub("%", "",overallGSR$Mean)) # change mean column to numeric
+overallGSRMean<-mean(overallGSR$Mean) # average GSR for athletes
+
+ggplot(athletesGSR,aes(x=year, y=athletesMeanGSR,group=1))+ 
+  geom_point()+geom_line()+
+  ylab("Percentage") + xlab("Year")+
+  ggtitle("Percentage of Graduation Rates for student-athletes in the U.S by Year")
+
+ggplot(overallGSR,aes(x=year, y=Mean,group=1))+ 
+  geom_point()+geom_line()+
+  ylab("Percentage") + xlab("Year")+
+  ggtitle("Percentage of overall Graduation Rates in the U.S by Year")
+
+
+ggplot()+ 
+  geom_point(data=athletesGSR,aes(x=year, y=athletesMeanGSR, color="athletes"))+
+  geom_point(data=overallGSR,aes(x=year, y=Mean, color="non-athletes"))+
+  ylab("Percentage") + xlab("Year")+
+  ggtitle("Percentage of Graduation Rates in the U.S by Year")
+  
+```
+
+<h2>Analysis</h2>
+Every year, there are around 12,900 students participating in NCAA sports, which is also 6% of the total student body. And out of the 12,900 students, ``r athleteGSRMean`` of them finish their college education in six years while the average graduation success rate from 1999 to 2011 for the state is at ``r overallGSRMean``. One of the reason the percentage difference between the two is so significant is because student-athletes must maintain a minimum GPA in order to maintain their status. Which means if one's academic performance did not meet the requirement(GPA 2.0), one would never become a student-athlete. Also, student athletes have extra help from private tutors those are part of the benefit of being on the varsity. These reasons explain the huge difference in percentage between the two groups</br>
+However, we should not diminish the fact that with the huge amount of time devoted to sports and traveling to compete against other schools, most of the student-athletes could still maintain their GPA to meet the requirement. 
+
+<h2>Conclusion</h2>
+In their four years of education in college, students encounter countless challenges and frustration. The only way to gradute on time is to overcome all of the obstacles. After investigating on the topic, whether student-athletes could deal with frustration better than the others could, I think it is fair to say that student-athletes are better problem solvers and they are also better in dealing with their frustraions. 
+
+<h2> References </h2>
+
+[Research paper by Kohs, Thomas. 2015](https://bit.ly/347rtFf)</br>
+  - "The researcher hypothesized that student-athletes would demonstrate a significantly greater level of confidence than the non-athlete students and as a result, would have a significantly greater GPA than the non-athlete students among genders and overall".</br>
+[News on a result of a research conducted by the University of Kansas](https://news.ku.edu/2014/01/15/study-shows-high-school-athletes-performed-better-school-persisted-graduation-more-non)</br>
+  - "Study shows that high school athletes perform better in school, persist to graduation more than non-athletes"</br>
+[NCAA website](http://www.ncaa.org/student-athletes/play-division-i-sports)</br>
+  - I gathered the information of the rules and requirments for student-athletes and datasets from the official website of NCAA

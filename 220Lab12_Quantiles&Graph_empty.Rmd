@@ -1,0 +1,147 @@
+---
+title: "Quantiles & Miscelaneous"
+#author: "Paloma Lopez de mesa"
+#date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  html_document: 
+    code_folding: show
+    theme: readable
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+library(tidyverse)
+library(gapminder)
+library(knitr)
+library(gtools)
+library(janitor)
+```
+
+
+We will learn this topic by using data of cholesterol levels for people that have smoked for at least 25 years. 
+
+Let's do a histogram of our graph to see how the data looks. 
+
+```{r, warning=FALSE}
+# Vector smokers contains levels of colesterol 
+Smokers<-c(225, 211, 209, 284, 258, 216, 196, 288, 250, 200, 209, 280, 225, 256, 243, 200, 213, 246, 225, 237, 232, 267, 232, 216, 216, 243, 200, 155, 216, 271, NA, 230, 309, 183, 280, 217, 305, 287, 217, 246, 351, NA , 200, 280, 209)
+
+# Try this code removing the knirt option warning=FALSE first, and remove the bins
+qplot(Smokers, geom="histogram", bins=20)
+```
+
+
+# Frequency and proportion table
+Frequency and porportion tables are useful tools to explore your data. 
+
+* Frequency table gives you the frequency of apearance of each value in a vector. To create one use function`table()`
+
+* Proportion table provides the proportion that each value represents in the sample. To create one use function`prop.table(table())`
+
+```{r}
+#Frequency table 
+t<-table(Smokers)
+
+#Proportion table 
+#prop.table(table())
+p<-prop.table(table(Smokers))
+
+#Use kable to make a nice looking table, here we use only the first 10 observations of the table. 
+kable(head(p,10), digits=3, col.names = c("Colesterol", "%"))
+```
+
+* A table that has both frequency and proportion is also a useful tool. Use the function `tabyl()` from the package janitor. 
+
+```{r}
+pt<-tabyl(Smokers, sort = TRUE)
+# Use kable but select only the relevant columns, only the first 10 observations of the table
+kable(tabyl(Smokers, sort = TRUE)[1:10,c(1,2,4)], digits=3, col.names = c("Colesterol", "Frequency","%"))
+```
+
+# Quantiles 
+
+The quantiles divide the data into equal proportions, usually into quarters called quartiles, tenths called deciles, and percentages called percentiles. The default calculation in R is quartiles. 
+
+The function  `quantile(x, probs = seq(0, 1, 0.25), na.rm = FALSE, names = TRUE, type = 7, ...)`
+```{r}
+
+#Calculate the quartiles of the data (remember this is the default option)
+quantile(Smokers, na.rm=TRUE)
+
+quantile(Smokers, 0.90, na.rm=TRUE) # gives you the 90 percentile for this data, this value means that 90% of the smokers had less than 287 in their cholesterol level. 
+
+```
+
+Sometimes it is also useful to have the quantiles in your data as part of the variables. The function `cut()` with `quantiles()` as the arguments to divide that data will do the trick.
+
+Take a look at the new data.frame with the new quantile variable and make a graph of the average colesterol level for each quantile. 
+
+```{r, message=FALSE, warning=FALSE}
+
+# if you want to create a variable in your dataset that contains the quantiles 
+q<-cut(Smokers, quantile(Smokers, na.rm=TRUE), include.lowest=TRUE)
+levels(q)<-c("25%","50%", "75%", "100%" )
+# another way to do it is using the function quantcut
+#q<-quantcut(Smokers, q=4, na.rm=TRUE)
+q1<-as.integer(q)
+q1<-q1*0.25
+df<-data.frame(Smokers, q, q1)%>%na.omit()
+
+# a table and a graph with the average colesterol level in each quartile
+
+(tq<-df%>%group_by(q, q1)%>%summarise(AvgColesterol=mean(Smokers)))
+tq%>%ggplot(aes(q, AvgColesterol))+geom_col(fill=2)+xlab("quartiles")
+```
+
+
+ To get the deciles you have to define the percentage points. Use the function `seq()` to create a sequence of an equidistant series of numbers, in this calculates 
+```{r}
+(deciles<-seq(0,1, by=0.1)) # this creates a sequence from 0 to 1 by 0.1
+```
+* Use deciles to get the deciles in the smokers data using the function quantile
+
+```{r}
+quantile(Smokers, deciles, na.rm=TRUE)
+
+```
+
+## Quantile function in the normal distribution. `qnorm()`
+
+The quantile function in a distribution allows you to find the critical value associated with a certain probability. $\alpha=P(x>criticalvalue)$ `qnorm()` gives you that critical value
+
+The table below shows the values asociated to different $alpha's$
+
+
+
+```{r, results='hold'}
+# The value of alpha is use for Hypothesis testing
+alpha <- c(0.05, 0.01, 0.025) 
+# Critical values for given alpha using the normal approximation and the t-student with 1000 d.f:
+n<-qnorm(alpha) # critical value for the normal distribution
+n1<-round(qnorm(1-alpha), 3)
+t<-round(qt(1-alpha, 1000), 3)
+
+kable(data.frame(alpha, t , n, n1), digits=3, padding=5L, col.names = c("$\\alpha$", "T-student", "Normal-left","Normal-right"))
+```
+
+This graph shows the critical values asociated to $alpha=0.5$
+
+```{r, echo=FALSE}
+#Ignore the code for this graphs the image is for ilustration purposes 
+ggplot(NULL, aes(c(-4,4))) +
+    geom_area(stat = "function", fun = dnorm, fill = "#00998a", xlim = c(-4, -1.960)) +
+  geom_area(stat = "function", fun = dnorm, fill = "grey80", xlim = c(-1.962, 1.960)) +
+  geom_area(stat = "function", fun = dnorm, fill ="#00998a" , xlim = c(1.962, 4)) +
+  geom_vline(xintercept = -1.960, color=2, linetype="dotted")+
+  annotate("text", label = "\u03B1/2", x = -2.3, y = 0.05, size = 4, col = "#00998a")+
+  geom_vline(xintercept = 1.962, color=2, linetype="dotted")+
+  annotate("text", label = "\u03B1/2", x = 2.3, y = 0.05, size = 4, col = "#00998a")+
+  labs(x = "z", y = "", title="Critical value for \u03B1") +
+  scale_y_continuous(breaks = NULL) +
+  scale_x_continuous(breaks = c(-1.960,1.960))+
+  theme_classic()
+
+
+```

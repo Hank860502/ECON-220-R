@@ -1,0 +1,152 @@
+---
+title: "tidyverse and dplyr package"
+author: "Dr. Paloma L. Moyano"
+date: "`r format(Sys.time(), '%B %Y')`"
+output:
+  html_document: 
+    theme: yeti
+    toc: yes
+  word_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(knitr)
+```
+
+## Installing packages
+R has many "packages", essentially add-ons to the basic R program that allow you to implement new techniques or access new methods.  One absolutely essential add-on is called `tidyverse`, which provides a set of methods for manipulating data and visualizing it. The package babynames has cool data on the babynames for the US that we will use in this class too. 
+
+A package is like an app on your phone, you install it but everytime you need it you have to open it, in the case of packages in R you install them and in order to call them everytime you use the function `library(packagename)`.
+```{r, echo = T, message = F, warning = F, results='hold'}
+install.packages("tidyverse")
+install.packages("babynames")
+library(tidyverse)
+library(babynames)
+```
+Today we will simply load some pre-built data from the `babynames` package, and use the `str()` and `summary()` functions understand the content of the data 
+```{r, eco = T}
+data(babynames, package="babynames") # loads the data 
+str(babynames) # provides the structure of the data.
+summary(babynames) # provides you a good summary of each variable in the data set 
+```
+The data we loaded is from the baby name data for each year from 1880 to 2015, the number of children of each sex given each name. All names used 5 or more times are included. As you can see from the summary, the data set contains five variables:year, sex, name, n the number of times the name was used, prop de proportion of times the name was used.  
+
+# Data Manipulation with `dplyr`
+
+## `dplyr` functions
+
+function |  Purpose
+-----------|--------
+ filter()   | Select rows based on criteria
+ arrange()  | order rows
+ select()   | choose columns
+ distinct() | unique values of column(s)
+ mutate() and transmute() | Create new columns
+ summarise()  | Find a summary statistic
+ sample_n() | Take a random sample
+ group_by() | Creates groups based on the values or categories of a variable
+
+
+### Understanding what `%>%` does
+
+You most likely have noticed each of these `dplyr` examples involve `%>%`.  This expression roughly translates to "and then".  So for example 
+```{r, echo = T, eval = F}
+babynames %>% filter(sex == "M" & year==1997) %>% head()
+```
+Roughly translates to: Take the babynames dataset **and then** keep only those observations that are male **and then** show the first 6 observations of that data set. If you execute this code, the output, shown above, will be the first 6 observations of a dataset that includes only men born in 1997.
+ 
+### Using `filter()` to select observations
+
+Let's practice what you learned. Create a new data set with just boys, name it just_boys. You could also create a dataset of just girls born between 1997 and 2002, name this dataset girls21
+
+```{r, echo = T}
+just_boys<- babynames %>% filter(sex=="M")
+girls21<-babynames %>% filter(sex=="F", year>=1997 & year<2002) %>% head()
+just_boys<- babynames %>% filter(sex=="M")
+girls21big<-babynames %>% filter(sex=="F", year>=1997 & year<2002)
+girls21
+girls21big
+#head(girls21,10)
+```
+
+### Using `arrange()` to order observations
+You can order the observations by a column, lets check 
+```{r, echo = T}
+youngest_first <- babynames %>% arrange(desc(year))
+head(youngest_first)
+tail(youngest_first)
+```
+
+### Your turn: combine filter with arrange. 
+Find the 6 most popular names for your gender in the year you where born. 
+
+```{r, echo = T}
+babynames %>% filter(sex=="F", year==1999)%>%arrange(desc(n))%>% head()
+
+```
+
+### Using `mutate()` to create new columns (variables) in a dataset
+
+Suppose hypothetically you wanted to create a new variable called "popular" when the names where chosen more that 10 thousand times. To create a new dataset that included this variable, you would have to use `mutate()`
+
+```{r, echo = T}
+new_babynames <- babynames %>% mutate("popular" = n>10000)
+head(new_babynames)
+```
+
+### Using `select()` to select columns
+
+The `select()` function is designed to allow one to select specific columns of the dataset.
+Below different ways of making the same selection in R. 
+
+```{r, echo=T}
+no_prop <-babynames %>% select(year, sex, name, n)
+head(no_prop)
+no_prop1 <- babynames %>% select(-prop)
+head(no_prop1)
+no_prop2 <- babynames %>% select(starts_with("pr"))
+no_prop3 <- babynames %>% select(year : n )
+head(no_prop3)
+```
+
+### Using `summarise()` to find summary statistics
+
+Suppose we wanted to find the average popularity of names, the number of observations in the data set, and maximun popularity in the same year. 
+
+```{r, echo = T}
+babynames %>% summarise("Avg_popularity" = mean(n), 
+                      "N" = length(n), 
+                      "Most_popular" =  max(n)) 
+
+filter(babynames, n==max(n))
+```
+
+### Finding statistics by group using `group_by()`
+
+The `group_by()` functions divides the data into groups for all future commands.  This can be extremely useful in combination with the `summarise()` function.  For example, suppose we wanted to find the average popularity of a name by sex in all this time:
+
+```{r, echo = T}
+babynames %>% group_by(sex) %>% summarise("Avg_pop"= mean(n))
+```
+What if you wanted to divide the data into groups by both year and sex we can just use the variables separated by a comma in the `group_by()` function. 
+
+
+##In class exercise
+
+Find the names that were most popular female and male in the year you were born. The verb top_n() gives you the top n observations based on the variable you use for ordering, in the console do ?top_n to see the arguments of this funtion and use it in the exercise.   
+
+```{r, echo = T}
+
+```
+
+
+
+
+
+
+
+

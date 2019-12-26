@@ -1,0 +1,174 @@
+---
+title: "Hank Chen Final Project Proposal"
+author: "Hank Chen"
+date: "10/18/2019"
+output:
+  prettydoc::html_pretty:
+    theme: leonids
+    
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(ggplot2)
+library(dplyr)
+library(tidyverse)
+
+```
+
+# Introduction to Research Idea
+I am interested in knowing if student-athletes are better in dealing with frustrations than those of other students. In order to make a observation of that, I need to first find the frustration factors of college students. In my research, we can see that the happiness of college students tends to have a positive relationship with their academic performances.  So in order to see whether student-athlets could better overcome frustrations, I am drawing the relationships between The success in athletic performance and the academic performances and the happiness level. In order to observe the relationships, I came up with three questions.<br/>
+
+Q1. have you attend any kind of athletic varsity?<br/>
+Q2. Rate the happiness you receive when participating in sports events?<br/>
+Q3. What is your cumulative GPA?</br>
+
+Some of the research questions for gathering datasets were modified for some reasons. </br>
+Question one is gathered from two questions</br>
+- q169: Do you participate in sports on campus  either varsity  club  or intermural?</br>
+- q230: Were you in any high school sport team?</br>
+Question two is the level of overall happiness.</br>
+  - q10: How happy are you on a scale of 1 to 10</br>
+Question three remains the same</br>
+  - q8 What is your cumulative GPA?
+
+ 
+# Load the raw data
+```{r}
+# Load data into R, the data is already in R format
+load("~/Desktop/EMORY2019Fall/econ220/Econ220DataF2019_ano.Rdata")
+
+# Let's give it another name so it is easier to work with it.
+Prodata<-Econ220DataF2019_ano
+```
+
+# Cleaning project dataset
+Clean the dataset by removing all the NAs in the questions.
+```{r}
+Prodata<-Prodata %>% 
+  filter(!is.na(q8))
+Prodata<-Prodata %>% 
+  filter(!is.na(q169))
+Prodata<-Prodata %>% 
+  filter(!is.na(q230))
+Prodata<-Prodata %>% 
+  filter(!is.na(q10))
+
+# store the value of each question to a shorter variable
+gpa <- Prodata$q8
+happiness <- Prodata$q10
+```
+
+
+# Identify the group of subjects
+
+ Compare the happiness level and GPA  of the subjects those have participated in sports team to those of people who had never participated in sports team
+
+```{r}
+# select all the people who have participated in sport teams at any given time, and call them athletes
+Prodata$athletes <- ifelse(Prodata$q169 == "Yes" | Prodata$q230 == "y", TRUE, FALSE)
+athletes <- Prodata %>% 
+  filter(q169 =="Yes" | q230 =="y")
+athletes_happiness <- athletes$q10
+athletes_gpa <- athletes$q8
+
+# select all the people who have never participate in any sport teams
+nonathletes <- Prodata %>% 
+  filter(q169=="No" & q230 =="n")
+nonathletes_happiness <- nonathletes$q10
+nonathletes_gpa <- nonathletes$q8
+
+summary(select(Prodata, "GPA"="q8", "happiness"="q10"))
+
+mean(athletes_happiness) - mean(nonathletes_happiness) # Comparing the happiness level of each group
+```
+From the result above, we can see that the average happiness of athletes are higher than those of non-athletes by almost 1 degree in a 1-10 scale. It is hard to conclude anything just with this information, but it laid a good foundation of our next step:
+
+# Overall relationship between happiness and GPA 
+I assumed that the happiness level of college students is correlated to their success in academic. So I drew a graph to visualize the correlation. 
+
+By observing the graph, I think it is fair to say that the graph supports my thesis that college students' happiness are postively related to their academic performances, which means the higher GPA a student gets, the happier he/she is.<br/>
+With the understanding of this, I am taking weak performance in academic as the main factor of frustration for college students. 
+
+```{r}
+ggplot(data=Prodata, mapping=aes(x=gpa, y=happiness))+
+  geom_point(alpha=0.5)+
+  geom_smooth(method='lm')
+```
+
+```{r}
+ggplot(data=Prodata, mapping=aes(x=gpa, y=happiness, color=athletes))+
+  geom_point(alpha=0.5)+
+  geom_smooth(method='lm')+facet_wrap(~athletes)
+```
+```{r}
+ggplot(data=Prodata, aes(x=athletes,  y=happiness, color=athletes))+
+  geom_boxplot()+
+labs(title="GPA & Happiness Boxplot") +
+   theme(plot.title = element_text(hjust = 0.5))
+```
+
+<h4> By observing the graphs and table above we can see that the fluctuation in happiness are a lot less severe in those of athletes than those of non-athletes. This result supports my research question that the success in athletic performance closely related to the ability to deal with frustraitions. I believe that when student-athletes encounter frustrations, they won't define their happiness with those frustrations. On the other hand, students who never participated in sports tend to have fluctuate their happiness a lot.
+Of course, there are many other points could be make with this graph, for example, the graph of the athletes shows that even with high GPA, many students are experiencing low happiness level. More points could be argue, however, the next section of the project take us to dive deeper to understand the correlation between an athlete and his/her 
+
+Taking the project to the next step and enlarge my sample of observants, I am going to observe the academic success rate of athletes and that of non-athletes.
+
+# Supporting Data
+National Collegiate Athletic Association(NCAA) provides the graduation rates of both student-athletes and those of overall students. I am going to use these datasets to support my thesis.<br/>
+[Link to the datasets](http://www.ncaa.org/about/resources/research/shared-ncaa-research-data)
+
+# How
+Because the ultimate goal of the college experience is graduation, the NCAA has devoted attention to researching student-athlete graduation rates for more than two decades.
+
+All colleges and universities are required by NCAA legislation and federal law (the Student Right-to-Know act from 1990) to report student graduation rates, and those institutions offering athletics aid are required to report for their student-athletes as well. The NCAA acquires student-athlete graduation rate data from the Department of Education’s Integrated Post-Secondary Data System Graduation Rate Survey (IPEDS-GRS). IPEDS-GRS is the proportion of first-year, full-time student-athletes who entered a school on athletics aid and graduated from that institution within six years.  Therefore, I am defining the success in academic by whether an individual could graduate from a college with in six years.
+
+In this project, I am only interested in the athletes in Division 1, which is the highest competitive division among the others. I will create a few graphs to visualize the academic success rate of student-athletes and that of full-time students.
+
+```{r}
+simpleGSR = read.csv("simple.csv",
+           stringsAsFactor = FALSE)
+
+detailGSR = read.csv("detailed.csv",
+           stringsAsFactor = FALSE)
+
+overallGSR = read.csv("overall.csv",
+           stringsAsFactor = FALSE)
+overallGSR<-head(overallGSR,13) # rest of three rows not needed
+
+athletesMeanGSR <- detailGSR %>% select(21:33)%>% na.omit() %>% summarise("2011_Mean"=round(mean(GSR_2011),2), "2010_Mean"=round(mean(GSR_2010),2),"2009_Mean"=round(mean(GSR_2009),2),"2008_Mean"=round(mean(GSR_2008),2),"2007_Mean"=round(mean(GSR_2007),2),"2006_Mean"=round(mean(GSR_2006),2),"2005_Mean"=round(mean(GSR_2005),2),"2004_Mean"=round(mean(GSR_2004),2),"2003_Mean"=round(mean(GSR_2003),2),"2002_Mean"=round(mean(GSR_2002),2),"2001_Mean"=round(mean(GSR_2001),2),"2000_Mean"=round(mean(GSR_2000),2),"1999_Mean"=round(mean(GSR_1999),2))
+
+df_transpose <- t(athletesMeanGSR)
+colnames(df_transpose)<-"Mean"
+
+year<-factor(2011:1999) # create time span for new column
+athletesGSR<-data.frame(df_transpose, year)
+mean(athletesGSR$Mean) # average GSR for athletes
+
+overallGSR$Mean<-as.numeric(sub("%", "",overallGSR$Mean)) # change mean column to numeric
+mean(overallGSR$Mean) # average GSR for athletes
+
+ggplot(athletesGSR,aes(x=year, y=df_transpose,group=1))+ 
+  geom_point()+geom_line()+
+  ylab("Percentage") + xlab("Year")+
+  ggtitle("Percentage of Graduation Rates in the U.S by Year")
+
+ggplot(overallGSR,aes(x=year, y=Mean,group=1))+ 
+  geom_point()+geom_line()+
+  ylab("Percentage") + xlab("Year")+
+  ggtitle("Percentage of Graduation Rates in the U.S by Year")
+
+
+ggplot()+ 
+  geom_point(data=athletesGSR,aes(x=year, y=df_transpose))+
+  geom_point(data=overallGSR,aes(x=year, y=Mean))+
+  ylab("Percentage") + xlab("Year")+
+  ggtitle("Percentage of Graduation Rates in the U.S by Year")
+  
+```
+
+
+Conclusion
+
+Every year, there are around 12,900 students participating in NCAA sports, which is also 6% of the total student body. And out of the 12,900 students, 86.7% of them finish their college education in six years while the average graduation success rate for the state is at 32.5%. 
+
